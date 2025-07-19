@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ICARUS - Çeviri Editörü</title><script src="https://cdn.tailwindcss.com"></script><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet"><script src="https://unpkg.com/lucide@latest"></script>
+    <style> body { font-family: 'Poppins', sans-serif; background-color: #f7f7f8; color: #333; } .active-segment { background-color: white; border-left: 4px solid #FFC300; } ::-webkit-scrollbar { width: 8px; height: 8px; } ::-webkit-scrollbar-track { background: #f1f1f1; } ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; } ::-webkit-scrollbar-thumb:hover { background: #a8a29e; } select { -webkit-appearance: none; -moz-appearance: none; appearance: none; } </style>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+</head>
+<body class="flex flex-col h-screen">
+    <header class="bg-white shadow-sm w-full flex items-center justify-between px-4 sm:px-6 py-2 flex-shrink-0 z-10">
+        <div class="flex items-center space-x-4"><svg width="32" height="32" viewBox="0 0 220 200" xmlns="http://www.w3.org/2000/svg"><title>ICARUS Logo</title><defs><linearGradient id="headerFlameGradient" x1="0%" y1="100%" x2="0%" y2="0%"><stop offset="0%" style="stop-color:#FFC300;" /><stop offset="100%" style="stop-color:#FF5733;" /></linearGradient></defs><g transform="scale(0.9) translate(10, 15)"><g><rect x="80" y="60" width="8" height="50" rx="2" fill="#FFC300"/><rect x="65" y="50" width="8" height="65" rx="2" fill="#FFC300"/><rect x="50" y="45" width="8" height="70" rx="2" fill="url(#headerFlameGradient)"/><rect x="35" y="55" width="8" height="55" rx="2" fill="#FFC300"/></g><g><rect x="132" y="60" width="8" height="50" rx="2" fill="#FFC300"/><rect x="147" y="50" width="8" height="65" rx="2" fill="#FFC300"/><rect x="162" y="45" width="8" height="70" rx="2" fill="url(#headerFlameGradient)"/><rect x="177" y="55" width="8" height="55" rx="2" fill="#FFC300"/></g><circle cx="110" cy="80" r="12" fill="#4A4A4A"/><rect x="100" y="90" width="20" height="40" rx="10" fill="#4A4A4A"/></g></svg><span class="text-xl font-semibold text-gray-800">icarus</span></div>
+        <div id="project-controls" class="flex-1 mx-8 relative flex items-center space-x-4 invisible"><select id="project-selector" class="flex-grow text-center bg-gray-100 border-gray-100 text-gray-600 font-medium p-2 rounded-md cursor-pointer hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-500"><option value="">Proje Seçin...</option></select><button id="new-project-btn" class="p-2 bg-amber-500 text-white rounded-full hover:bg-amber-600 flex-shrink-0"><i data-lucide="plus" class="w-5 h-5"></i></button></div>
+        <div class="flex items-center space-x-3 sm:space-x-5">
+            <div id="user-info" class="hidden items-center space-x-3"><span class="text-sm text-gray-600">Hoş geldin, <span id="username-display" class="font-semibold"></span></span><button id="logout-btn" class="text-sm text-red-500 hover:underline">Çıkış Yap</button></div>
+            <div id="auth-buttons"><button id="login-modal-btn" class="px-4 py-2 text-sm font-semibold text-white bg-amber-500 rounded-md hover:bg-amber-600">Giriş Yap</button></div>
+        </div>
+    </header>
+    <div class="flex-grow flex overflow-hidden">
+        <main class="flex-grow flex flex-col overflow-y-auto">
+            <div id="editor-header" class="flex items-center justify-end bg-gray-50 border-b px-6 py-3 invisible"><div class="flex items-center space-x-2"><button id="delete-project-btn" class="p-2 bg-red-600 text-white rounded-md hover:bg-red-700 shadow-sm flex items-center" title="Projeyi Sil"><i data-lucide="trash-2" class="w-4 h-4"></i></button><button id="download-button-main" class="px-3 py-1.5 text-sm font-semibold text-white bg-amber-500 rounded-md hover:bg-amber-600 shadow-sm flex items-center space-x-2 transition-all duration-300"><i data-lucide="download" class="w-4 h-4"></i><span>Çeviriyi İndir</span></button><div id="download-options" class="hidden flex items-center space-x-2"><button id="download-txt" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Sadece Çeviri</button><button id="download-json" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300">Hepsi</button></div></div></div>
+            <div id="segments-container" class="flex-grow p-2 sm:p-4 space-y-2"><div id="welcome-message" class="h-full flex items-center justify-center text-gray-500">Uygulama yükleniyor...</div></div>
+        </main>
+    </div>
+    <div id="upload-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50"><div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md"><h2 class="text-2xl font-bold mb-4">Yeni Proje Yükle</h2><form id="upload-form"><div class="mb-4"><label for="projectName" class="block text-sm font-medium text-gray-700">Proje Adı</label><input type="text" name="projectName" id="projectName" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required></div><div class="mb-6"><label for="projectFile" class="block text-sm font-medium text-gray-700">Çeviri Dosyası (.json veya .txt)</label><input type="file" name="projectFile" id="projectFile" class="mt-1 block w-full text-sm" accept=".json,.txt" required></div><div class="flex justify-end space-x-4"><button type="button" id="cancel-upload-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">İptal</button><button type="submit" class="px-4 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600">Yükle ve Oluştur</button></div></form></div></div>
+    <div id="delete-confirm-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50"><div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-sm"><h2 class="text-2xl font-bold mb-2">Projeyi Sil</h2><p class="text-gray-600 mb-6">Bu projeyi ve içindeki tüm çevirileri kalıcı olarak silmek istediğinizden emin misiniz?</p><div class="flex justify-end space-x-4"><button type="button" id="cancel-delete-btn" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">İptal</button><button type="button" id="confirm-delete-btn" class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Evet, Sil</button></div></div></div>
+    <div id="auth-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50"><div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-sm"><h2 id="auth-title" class="text-2xl font-bold mb-6 text-center">Giriş Yap</h2><form id="auth-form"><div class="mb-4"><label for="username" class="block text-sm font-medium text-gray-700">Kullanıcı Adı</label><input type="text" name="username" id="username" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required></div><div class="mb-6"><label for="password" class="block text-sm font-medium text-gray-700">Şifre</label><input type="password" name="password" id="password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md" required></div><button id="auth-submit-btn" type="submit" class="w-full px-4 py-2 bg-amber-500 text-white rounded-md hover:bg-amber-600">Giriş Yap</button></form><p class="mt-4 text-center text-sm"><span id="auth-prompt-text">Hesabın yok mu?</span><a href="#" id="auth-switch-link" class="font-medium text-amber-600 hover:underline">Kayıt Ol</a></p></div></div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Element Seçimleri
+        const projectControls = document.getElementById('project-controls');
+        const projectSelector = document.getElementById('project-selector');
+        const segmentsContainer = document.getElementById('segments-container');
+        const editorHeader = document.getElementById('editor-header');
+        const newProjectBtn = document.getElementById('new-project-btn');
+        const uploadModal = document.getElementById('upload-modal');
+        const cancelUploadBtn = document.getElementById('cancel-upload-btn');
+        const uploadForm = document.getElementById('upload-form');
+        const deleteProjectBtn = document.getElementById('delete-project-btn');
+        const deleteConfirmModal = document.getElementById('delete-confirm-modal');
+        const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+        const authModal = document.getElementById('auth-modal');
+        const loginModalBtn = document.getElementById('login-modal-btn');
+        const userInfo = document.getElementById('user-info');
+        const authButtons = document.getElementById('auth-buttons');
+        const usernameDisplay = document.getElementById('username-display');
+        const logoutBtn = document.getElementById('logout-btn');
+        const authForm = document.getElementById('auth-form');
+        const authTitle = document.getElementById('auth-title');
+        const authSubmitBtn = document.getElementById('auth-submit-btn');
+        const authPromptText = document.getElementById('auth-prompt-text');
+        const authSwitchLink = document.getElementById('auth-switch-link');
+        const welcomeMessage = document.getElementById('welcome-message');
+        const mainDownloadButton = document.getElementById('download-button-main');
+        const downloadOptions = document.getElementById('download-options');
+        const downloadTxtButton = document.getElementById('download-txt');
+        const downloadJsonButton = document.getElementById('download-json');
+        let currentProjectId = null;
+        let isLoginMode = true;
+
+        function showToast(message, type = 'info') { const colors = { success: "linear-gradient(to right, #00b09b, #96c93d)", error: "linear-gradient(to right, #e74c3c, #c0392b)", info: "linear-gradient(to right, #3498db, #2980b9)" }; Toastify({ text: message, duration: 3000, close: true, gravity: "bottom", position: "right", stopOnFocus: true, style: { background: colors[type] } }).showToast(); }
+        async function saveTranslation(id, translation) { try { await fetch('/api/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: parseInt(id), newTranslation: translation }) }); } catch (error) { console.error('Kaydetme hatası:', error); } }
+        function renderSegments(data) { segmentsContainer.innerHTML = ''; if (!data || data.length === 0) { segmentsContainer.innerHTML = '<div class="h-full flex items-center justify-center text-gray-500">Bu projede çeviri satırı yok.</div>'; return; } data.forEach((segment, index) => { const displayId = index + 1; const segmentHTML = `<div class="grid grid-cols-12 gap-4 p-4 rounded-lg bg-white shadow-sm cursor-pointer" data-id="${segment.id}"><div class="col-span-1 text-center text-gray-400 font-mono text-sm pt-1">${displayId}</div><div class="col-span-11 sm:col-span-5"><p class="text-gray-800 leading-relaxed">${segment.source}</p></div><div class="col-span-11 sm:col-span-6 col-start-2 sm:col-start-auto"><textarea class="translation-input w-full h-16 p-2 border border-gray-200 rounded-md" placeholder="Çevirinizi buraya yazın...">${segment.translation || ''}</textarea></div></div>`; segmentsContainer.innerHTML += segmentHTML; }); }
+        async function loadSegments(projectId) { currentProjectId = projectId; if (!projectId) { segmentsContainer.innerHTML = '<div class="h-full flex items-center justify-center text-gray-500">Lütfen bir proje seçin veya yeni bir tane oluşturun.</div>'; editorHeader.classList.add('invisible'); return; } try { const response = await fetch(`/api/segments/${projectId}`); const segments = await response.json(); renderSegments(segments); editorHeader.classList.remove('invisible'); localStorage.setItem('lastSelectedProjectId', projectId); } catch (error) { console.error('Segmentler yüklenirken hata:', error); segmentsContainer.innerHTML = '<div class="h-full flex items-center justify-center text-red-500">Bu projeye erişim yetkiniz yok veya bir hata oluştu.</div>'; } }
+        async function loadProjects() { try { const response = await fetch('/api/projects'); if(!response.ok) { projectSelector.innerHTML = '<option value="">Projeler yüklenemedi</option>'; return;} const projects = await response.json(); const currentVal = projectSelector.value; projectSelector.innerHTML = '<option value="">Proje Seçin...</option>'; projects.forEach(project => { const option = document.createElement('option'); option.value = project.id; option.textContent = project.name; projectSelector.appendChild(option); }); const lastProjectId = localStorage.getItem('lastSelectedProjectId'); if(lastProjectId && projects.some(p => p.id == lastProjectId)) projectSelector.value = lastProjectId; } catch (error) { console.error('Projeler yüklenirken hata:', error); } }
+        function downloadFile(content, fileName, contentType) { const blob = new Blob([content], { type: contentType }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = fileName; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); }
+        
+        function updateUIForLoginState(loggedIn, user) {
+            if (loggedIn) {
+                authButtons.classList.add('hidden');
+                authModal.classList.add('hidden');
+                userInfo.classList.remove('hidden');
+                userInfo.classList.add('flex');
+                usernameDisplay.textContent = user.username;
+                projectControls.classList.remove('invisible');
+                document.getElementById('welcome-message').textContent = 'Lütfen bir proje seçin veya yeni bir tane oluşturun.';
+                loadProjects();
+            } else {
+                authButtons.classList.remove('hidden');
+                authModal.classList.remove('hidden'); // <<<--- İŞTE DEĞİŞİKLİK BURADA
+                userInfo.classList.add('hidden');
+                userInfo.classList.remove('flex');
+                projectControls.classList.add('invisible');
+                editorHeader.classList.add('invisible');
+                segmentsContainer.innerHTML = '<div id="welcome-message" class="h-full flex items-center justify-center text-gray-500">Uygulamayı kullanmak için lütfen giriş yapın.</div>';
+                projectSelector.innerHTML = '<option value="">Giriş Yapmalısınız</option>';
+            }
+        }
+        
+        async function checkSession() { try { const response = await fetch('/api/session'); const data = await response.json(); updateUIForLoginState(data.loggedIn, data.user); } catch (error) { console.error("Oturum kontrol hatası:", error); } }
+
+        function setupEventListeners() {
+            // loginModalBtn artık modalı göstermiyor, bu işi checkSession yapıyor.
+            // Sadece bir güvenlik önlemi olarak bırakabiliriz.
+            loginModalBtn.addEventListener('click', () => authModal.classList.remove('hidden'));
+
+            authModal.addEventListener('click', (e) => { /* Modal dışına tıklayınca kapanmasın */ });
+            authSwitchLink.addEventListener('click', (e) => { e.preventDefault(); isLoginMode = !isLoginMode; authTitle.textContent = isLoginMode ? 'Giriş Yap' : 'Kayıt Ol'; authSubmitBtn.textContent = isLoginMode ? 'Giriş Yap' : 'Kayıt Ol'; authPromptText.textContent = isLoginMode ? 'Hesabın yok mu?' : 'Zaten hesabın var mı?'; authSwitchLink.textContent = isLoginMode ? 'Kayıt Ol' : 'Giriş Yap'; });
+            authForm.addEventListener('submit', async (e) => { e.preventDefault(); const url = isLoginMode ? '/api/login' : '/api/register'; const formData = new FormData(authForm); const data = Object.fromEntries(formData.entries()); try { const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); const result = await response.json(); if (response.ok) { showToast(isLoginMode ? `Hoş geldin, ${result.username}!` : 'Kayıt başarılı! Giriş yapıldı.', 'success'); updateUIForLoginState(true, { username: result.username }); } else { throw new Error(result.message); } } catch (error) { showToast(error.message, 'error'); } });
+            logoutBtn.addEventListener('click', async () => { await fetch('/api/logout', { method: 'POST' }); updateUIForLoginState(false, null); showToast('Başarıyla çıkış yapıldı.', 'info'); });
+            projectSelector.addEventListener('change', () => loadSegments(projectSelector.value));
+            segmentsContainer.addEventListener('change', e => { if (e.target.classList.contains('translation-input')) { const el = e.target.closest('[data-id]'); saveTranslation(el.dataset.id, e.target.value); } });
+            segmentsContainer.addEventListener('click', e => { const el = e.target.closest('.grid.grid-cols-12'); if (el) { segmentsContainer.querySelectorAll('.grid.grid-cols-12').forEach(s => s.classList.remove('active-segment')); el.classList.add('active-segment'); } });
+            newProjectBtn.addEventListener('click', () => { uploadModal.classList.remove('hidden'); });
+            cancelUploadBtn.addEventListener('click', () => { uploadModal.classList.add('hidden'); });
+            uploadForm.addEventListener('submit', async e => { e.preventDefault(); const formData = new FormData(uploadForm); try { const response = await fetch('/api/upload', { method: 'POST', body: formData }); const result = await response.json(); if (result.success) { showToast("Proje başarıyla oluşturuldu!", 'success'); uploadModal.classList.add('hidden'); uploadForm.reset(); await loadProjects(); projectSelector.value = result.newProjectId; await loadSegments(result.newProjectId); } else { throw new Error(result.message); } } catch (error) { showToast('Hata: ' + (error.message || 'Bilinmeyen bir hata oluştu.'), 'error'); } });
+            deleteProjectBtn.addEventListener('click', () => { if (currentProjectId) { deleteConfirmModal.classList.remove('hidden'); } });
+            cancelDeleteBtn.addEventListener('click', () => { deleteConfirmModal.classList.add('hidden'); });
+            confirmDeleteBtn.addEventListener('click', async () => { if (currentProjectId) { try { const response = await fetch(`/api/projects/${currentProjectId}`, { method: 'DELETE' }); const result = await response.json(); if (result.success) { showToast("Proje başarıyla silindi.", 'info'); deleteConfirmModal.classList.add('hidden'); localStorage.removeItem('lastSelectedProjectId'); currentProjectId = null; await loadProjects(); loadSegments(null); } else { throw new Error(result.message); } } catch (error) { showToast('Hata: ' + error.message, 'error'); } } });
+            mainDownloadButton.addEventListener('click', () => { downloadOptions.classList.toggle('hidden'); });
+            downloadTxtButton.addEventListener('click', () => { const list = Array.from(segmentsContainer.querySelectorAll('.translation-input')).map(t => t.value); downloadFile(list.join('\n'), 'translations.txt', 'text/plain;charset=utf-8'); downloadOptions.classList.add('hidden'); });
+            downloadJsonButton.addEventListener('click', () => { const data = {}; Array.from(segmentsContainer.querySelectorAll('.grid[data-id]')).forEach(s => { data[s.querySelector('p').innerText] = s.querySelector('textarea').value; }); downloadFile(JSON.stringify(data, null, 2), 'translations.json', 'application/json'); downloadOptions.classList.add('hidden'); });
+        }
+
+        async function initializeApp() {
+            setupEventListeners();
+            await checkSession();
+            lucide.createIcons();
+        }
+        initializeApp();
+    });
+    </script>
+</body>
+</html>
